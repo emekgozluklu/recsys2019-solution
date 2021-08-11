@@ -33,3 +33,7 @@ def get_hotel_price_by_id(hotel_id, impressions, prices):
 
 def dummy_function():
     pass
+
+
+def clickout_filter(x):
+    return x["action_type"] == "clickout item"
