@@ -6,19 +6,10 @@ from csv import DictReader
 from helpers import *
 from tqdm import tqdm
 from itertools import groupby
+from collections import defaultdict
 
 EVENTS_PATH = os.path.join("data", "events.csv")
-FULL_ITEM_FEATURES_PATH = os.path.join("data", "full_item_features.csv")
-ITEM_DENSE_FEATURES_PATH = os.path.join("data", "item_dense_features.csv")
-ITEM_POIS_PATH = os.path.join("data", "item_pois.joblib")
-ITEM_PRICES_PATH = os.path.join("data", "item_prices.csv")
-ITEM_SORT_BY_DIST_STATS_PATH = os.path.join("data", "item_sort_by_distance_stats.joblib")
-ITEM_SORT_BY_POPULARITY_STATS_PATH = os.path.join("data", "item_sort_by_popularity_stats.joblib")
-ITEM_SORT_BY_RATING_STATS_PATH = os.path.join("data", "item_sort_by_rating_stats.joblib")
-PRICE_PCT_BY_CITY_PATH = os.path.join("data", "price_pct_by_city.joblib")
-PRICE_PCT_BY_PLATFORM_PATH = os.path.join("data", "price_pct_by_platform.joblib")
-
-SAVE_PATH = os.path.join("data", "features.csv")
+SAVE_PATH = os.path.join("data", "session_features.csv")
 
 SESSION_FEATURES = []
 USER_FEATURES = []
@@ -32,24 +23,18 @@ ITEM_ACTIONS = {
     "interaction item rating",
 }
 
-from collections import defaultdict
-
-
-def clickout_filter(x):
-    return x["action_type"] == "clickout item"
-
-
 DUMMY = -1000
 
 
 class CurrentSessionFeatures:
 
-    def __init__(self, data_path, write_path, num_of_sessions=50000, events_sorted=False):
+    def __init__(self, data_path, write_path="data/session_features.csv", num_of_sessions=50000, events_sorted=False):
 
         self.data = DictReader(open(data_path, encoding='utf-8'))
         self.sorted = events_sorted
         self.data_sorted = self.data if self.sorted else None
         self.num_of_sessions = num_of_sessions
+        self.write_path = write_path
 
         self.item_prices = DictReader(open("data/item_prices.csv"))
 
@@ -64,6 +49,7 @@ class CurrentSessionFeatures:
 
         self.session_id = []  # added
         self.session_start_ts = []  # added
+        self.price_vs_mean_price = []
         self.clickout_item_item_last_timestamp = []  # added
         self.rank = []  # added
         self.previous_click_price_diff_session = []  # added
@@ -86,10 +72,13 @@ class CurrentSessionFeatures:
         self.last_action_type = []  # added
         self.price_above = []  # added
         self.price_diff_from_estimated_budget = []
+        self.impression_prices = []
+        self.impressions = []
 
-        self.feature_update_map = {
+        self.feature_updater_map = {
             "session_id": self.update_session_id,
             "session_start_ts": self.update_session_start_ts,
+            "price_vs_mean_price": self.update_price_vs_mean_price,
             "clickout_item_item_last_timestamp": self.update_clickout_item_item_last_timestamp,
             "rank": self.update_rank,
             "previous_click_price_diff_session": self.update_previous_click_price_diff_session,
@@ -106,7 +95,35 @@ class CurrentSessionFeatures:
             "step": self.update_step,
             "last_action_type": self.update_last_action_type,
             "price_above": self.update_price_above,
+            "impression_prices": self.update_impression_prices,
+            "impressions": dummy_function,
         }
+
+        self.feature_array_map = {
+            "session_id": self.session_id,
+            "session_start_ts": self.session_start_ts,
+            "price_vs_mean_price": self.price_vs_mean_price,
+            "clickout_item_item_last_timestamp": self.clickout_item_item_last_timestamp,
+            "rank": self.rank,
+            "previous_click_price_diff_session": self.previous_click_price_diff_session,
+            "top_of_impression": self.top_of_impression,  # 7595 it/s
+            "price_rank": self.price_rank,  # 7047 it/s
+            "price_rank_among_above": self.price_rank_among_above,  # 6640 it/s
+            "num_of_item_actions": self.num_of_item_actions,
+            "price_rank_diff_last_interaction": self.price_rank_diff_last_interaction,  # 5582 it/s
+            "last_interaction_relative_position": self.last_interaction_relative_position,
+            "last_interaction_absolute_position": self.last_interaction_absolute_position,
+            "actions_since_last_item_action": self.actions_since_last_item_action,
+            "time_since_last_item_action": self.time_since_last_item_action,
+            "same_impression_in_session": self.same_impressions_in_session,
+            "step": self.step,
+            "last_action_type": self.last_action_type,
+            "price_above": self.price_above,
+            "impression_prices": self.impression_prices,
+            "impressions": self.impressions,
+        }
+
+        self.feature_names = list(self.feature_array_map.keys())
 
         self.invalid_session_ids = []
 
@@ -118,12 +135,18 @@ class CurrentSessionFeatures:
         end_ts = int(self.current_session[-1]["timestamp"])
         self.session_start_ts.append(end_ts - start_ts)
 
+    def update_price_vs_mean_price(self):
+        mean_price = sum(self.current_prices) / len(self.current_prices)
+        self.price_vs_mean_price.append("|".join([str(round(pri/mean_price, 3)) for pri in self.current_prices]))
+
     def update_clickout_item_item_last_timestamp(self):
         if len(self.current_session_clickouts) > 2:
             self.clickout_item_item_last_timestamp.append(
                 int(self.current_session_clickouts[-1]["timestamp"]) -
                 int(self.current_session_clickouts[-2]["timestamp"])
             )
+        else:
+            self.clickout_item_item_last_timestamp.append(DUMMY)
 
     def update_rank(self):
         self.rank.append("|".join([str(j+1) for j in range(len(self.current_impressions))]))
@@ -215,9 +238,14 @@ class CurrentSessionFeatures:
     def update_price_above(self):
         self.price_above.append("|".join([str(self.current_prices[0])] + list(map(str, self.current_prices[:-1]))))
 
+    def update_impression_prices(self):
+        self.impression_prices.append(self.current_session_clickouts[-1]["prices"])
+        self.impressions.append(self.current_session_clickouts[-1]["impressions"])
+
     def invalid_session_handler(self):
         self.session_id.append(self.current_session_id)
         self.session_start_ts.append(None)
+        self.price_vs_mean_price.append(None)
         self.clickout_item_item_last_timestamp.append(None)
         self.rank.append(None)
         self.previous_click_price_diff_session.append(None)
@@ -235,6 +263,8 @@ class CurrentSessionFeatures:
         self.step.append(None)
         self.last_action_type.append(None)
         self.price_above.append(None)
+        self.impressions.append(None)
+        self.impression_prices.append(None)
 
     def run_updaters(self, feature_subset=None):
         if not self.current_session_valid:
@@ -243,11 +273,11 @@ class CurrentSessionFeatures:
 
         if feature_subset is not None:
             for feat in feature_subset:
-                updater = self.feature_update_map[feat]
+                updater = self.feature_updater_map[feat]
                 updater()
 
         else:
-            for updater in self.feature_update_map.values():
+            for updater in self.feature_updater_map.values():
                 updater()
 
     def extract_features(self):
@@ -287,12 +317,16 @@ class CurrentSessionFeatures:
             self.current_session_valid = True
         print("extraction completed.")
 
+    def save_features(self):
+        as_df = pd.DataFrame(columns=self.feature_names)
+        for feat, values in self.feature_array_map.items():
+            print(feat,len(values))
+            as_df[feat] = values
+        as_df.to_csv(self.write_path)
+
+
 if __name__ == "__main__":
-    csfe = CurrentSessionFeatures("data/events_sorted.csv", "", events_sorted=True)
+    csfe = CurrentSessionFeatures("data/events_sorted.csv", events_sorted=True)
     csfe.extract_features()
-    print(csfe.price_above[:50])
-
-
-
-
-
+    print("Saving...")
+    csfe.save_features()
