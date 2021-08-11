@@ -7,21 +7,10 @@ from helpers import *
 from tqdm import tqdm
 from itertools import groupby
 from collections import defaultdict
+from constants import ITEM_ACTIONS
 
 EVENTS_PATH = os.path.join("data", "events.csv")
 SAVE_PATH = os.path.join("data", "session_features.csv")
-
-SESSION_FEATURES = []
-USER_FEATURES = []
-ITEM_FEATURES = []
-
-ITEM_ACTIONS = {
-    "interaction item image",
-    "clickout item",
-    "interaction item info",
-    "interaction item deals",
-    "interaction item rating",
-}
 
 DUMMY = -1000
 
@@ -328,5 +317,6 @@ class CurrentSessionFeatures:
 if __name__ == "__main__":
     csfe = CurrentSessionFeatures("data/events_sorted.csv", events_sorted=True)
     csfe.extract_features()
+    print(csfe.invalid_session_ids)
     print("Saving...")
-    csfe.save_features()
+    # csfe.save_features()
