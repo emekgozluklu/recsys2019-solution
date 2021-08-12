@@ -1,6 +1,4 @@
 import pandas as pd
-import numpy as np
-import joblib
 import os
 from csv import DictReader
 from helpers import *
@@ -63,6 +61,14 @@ class CurrentSessionFeatures:
         self.price_diff_from_estimated_budget = []
         self.impression_prices = []
         self.impressions = []
+        self.clickout_prob_time_position_offset = []
+        self.platform = []
+        self.device = []
+        self.active_filters = []
+        self.hour = []
+        self.day_of_the_week = []
+        self.cheapest = []
+        self.most_expensive = []
 
         self.feature_updater_map = {
             "session_id": self.update_session_id,
@@ -86,6 +92,14 @@ class CurrentSessionFeatures:
             "price_above": self.update_price_above,
             "impression_prices": self.update_impression_prices,
             "impressions": dummy_function,
+            "clickout_prob_time_position_offset": self.update_clickout_prob_time_position_offset,
+            "platform": self.update_platform,
+            "device": self.update_device,
+            "active_filters": self.update_active_filters,
+            "hour": self.update_hour,
+            "day_of_the_week": self.update_day_of_the_week,
+            "cheapest": self.update_cheapest,
+            "most_expensive": self.update_most_expensive,
         }
 
         self.feature_array_map = {
@@ -110,6 +124,14 @@ class CurrentSessionFeatures:
             "price_above": self.price_above,
             "impression_prices": self.impression_prices,
             "impressions": self.impressions,
+            "clickout_prob_time_position_offset": self.clickout_prob_time_position_offset,
+            "platform": self.platform,
+            "device": self.device,
+            "active_filters": self.active_filters,
+            "hour": self.hour,
+            "day_of_the_week": self.day_of_the_week,
+            "cheapest": self.cheapest,
+            "most_expensive": self.most_expensive,
         }
 
         self.feature_names = list(self.feature_array_map.keys())
@@ -231,6 +253,31 @@ class CurrentSessionFeatures:
         self.impression_prices.append(self.current_session_clickouts[-1]["prices"])
         self.impressions.append(self.current_session_clickouts[-1]["impressions"])
 
+    def update_clickout_prob_time_position_offset(self):
+        pass
+
+    def update_platform(self):
+        pass
+
+    def update_device(self):
+        pass
+
+    def update_active_filters(self):
+        pass
+
+    def update_hour(self):
+        pass
+
+    def update_day_of_the_week(self):
+        pass
+
+    def update_cheapest(self):
+        pass
+
+    def update_most_expensive(self):
+        pass
+
+
     def invalid_session_handler(self):
         self.session_id.append(self.current_session_id)
         self.session_start_ts.append(None)
@@ -254,6 +301,14 @@ class CurrentSessionFeatures:
         self.price_above.append(None)
         self.impressions.append(None)
         self.impression_prices.append(None)
+        self.clickout_prob_time_position_offset.append(None)
+        self.platform.append(None)
+        self.device.append(None)
+        self.active_filters.append(None)
+        self.hour.append(None)
+        self.day_of_the_week.append(None)
+        self.cheapest.append(None)
+        self.most_expensive.append(None)
 
     def run_updaters(self, feature_subset=None):
         if not self.current_session_valid:
