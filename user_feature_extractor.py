@@ -59,8 +59,11 @@ class UserFeatures:
         self.interacted_items_user = []
         self.viewed_items_avg_price = []
         self.interacted_items_avg_price = []
+        self.viewed_items_avg_price_diff = []
+        self.interacted_items_avg_price_diff = []
         self.viewed_items_avg_price_div = []
         self.interacted_items_avg_price_div = []
+        self.interacted_and_viewed_items_price_diff = []
         self.item_clicked_before = []
         self.clickout_user_id = []
         self.clickout_session_id = []
@@ -76,8 +79,11 @@ class UserFeatures:
             "interacted_items_user": self.update_interacted_items_user,
             "viewed_items_avg_price": self.update_viewed_items_avg_price,
             "interacted_items_avg_price": self.update_interacted_items_avg_price,
+            "viewed_items_avg_price_diff": self.update_viewed_items_avg_price_diff,
+            "interacted_items_avg_price_diff": self.update_interacted_items_avg_price_diff,
             "viewed_items_avg_price_div": self.update_viewed_items_avg_price_div,
             "interacted_items_avg_price_div": self.update_interacted_items_avg_price_div,
+            "interacted_and_viewed_items_price_diff": self.update_interacted_and_viewed_items_price_diff,
             "item_clicked_before": self.update_item_clicked_before,
             "clickout_user_id": self.update_action_identifiers,
             "clickout_session_id": dummy_function,
@@ -93,8 +99,11 @@ class UserFeatures:
             "interacted_items_user": self.interacted_items_user,
             "viewed_items_avg_price": self.viewed_items_avg_price,
             "interacted_items_avg_price": self.interacted_items_avg_price,
+            "viewed_items_avg_price_diff": self.viewed_items_avg_price_diff,
+            "interacted_items_avg_price_diff": self.interacted_items_avg_price_diff,
             "viewed_items_avg_price_div": self.viewed_items_avg_price_div,
             "interacted_items_avg_price_div": self.interacted_items_avg_price_div,
+            "interacted_and_viewed_items_price_diff": self.interacted_and_viewed_items_price_diff,
             "item_clicked_before": self.item_clicked_before,
             "clickout_user_id": self.clickout_user_id,
             "clickout_session_id": self.clickout_session_id,
@@ -148,6 +157,24 @@ class UserFeatures:
         else:
             self.interacted_items_avg_price.append(DUMMY)
 
+    def update_viewed_items_avg_price_diff(self):
+        if len(self.user_clicked_item_prices) > 0:
+            avg = np.mean(self.user_clicked_item_prices)
+            self.viewed_items_avg_price_diff.append(
+                "|".join([str(normalize_float(pri - avg)) for pri in self.current_prices])
+            )
+        else:
+            self.viewed_items_avg_price_diff.append(DUMMY)
+
+    def update_interacted_items_avg_price_diff(self):
+        if len(self.user_interacted_item_prices) > 0:
+            avg = np.mean(self.user_interacted_item_prices)
+            self.interacted_items_avg_price_diff.append(
+                "|".join([str(normalize_float(pri - avg)) for pri in self.current_prices])
+            )
+        else:
+            self.interacted_items_avg_price_diff.append(DUMMY)
+
     def update_viewed_items_avg_price_div(self):
         if len(self.user_clicked_item_prices) > 0:
             avg = np.mean(self.user_clicked_item_prices)
@@ -160,11 +187,24 @@ class UserFeatures:
     def update_interacted_items_avg_price_div(self):
         if len(self.user_interacted_item_prices) > 0:
             avg = np.mean(self.user_interacted_item_prices)
+
+            if avg == 0:
+                self.interacted_items_avg_price_div.append(DUMMY)
+                return
+
             self.interacted_items_avg_price_div.append(
                 "|".join([str(normalize_float(pri/avg)) for pri in self.current_prices])
             )
         else:
             self.interacted_items_avg_price_div.append(DUMMY)
+
+    def update_interacted_and_viewed_items_price_diff(self):
+        if len(self.user_interacted_item_prices) > 0 and len(self.user_clicked_item_prices) > 0:
+            int_avg = np.mean(self.user_interacted_item_prices)
+            click_avg = np.mean(self.user_clicked_item_prices)
+            self.interacted_and_viewed_items_price_diff.append(abs(int_avg - click_avg))
+        else:
+            self.interacted_and_viewed_items_price_diff.append(DUMMY)
 
     def update_item_clicked_before(self):
         self.item_clicked_before.append("|".join([str(int(imp_id in self.user_interacted_items)) for imp_id in self.current_impressions]))
