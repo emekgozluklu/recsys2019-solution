@@ -74,6 +74,16 @@ class CurrentSessionFeatures:
         self.cheapest = []  # added
         self.most_expensive = []  # added
         self.timestamps = []
+        self.impressions_max_price = []
+        self.impressions_min_price = []
+        self.impressions_price_range = []
+        self.num_of_impressions = []
+        self.price_rel_to_imp_min = []
+        self.price_rel_to_imp_max = []
+        self.price_rel_to_hist_min = []
+        self.price_rel_to_hist_max = []
+        self.historical_mean_rank = []
+        self.rank_among_historical_mean_ranks = []
 
         self.feature_updater_map = {
             "session_id": self.update_session_id,
@@ -104,18 +114,42 @@ class CurrentSessionFeatures:
             "cheapest": self.update_cheapest,
             "most_expensive": self.update_most_expensive,
             "timestamps": self.update_timestamps,
+            "impressions_max_price": self.update_impressions_max_price,
+            "impressions_min_price": self.update_impressions_min_price,
+            "impressions_price_range": self.update_impressions_price_range,
+            "num_of_impressions": self.update_num_of_impressions,
+            "price_rel_to_imp_min": self.update_price_rel_to_imp_min,
+            "price_rel_to_imp_max": self.update_price_rel_to_imp_max,
+            # "price_rel_to_hist_min": self.price_rel_to_hist_min,
+            # "price_rel_to_hist_max": self.price_rel_to_hist_max,
+            # "historical_mean_rank": self.historical_mean_rank,
+            # "rank_among_historical_mean_ranks": self.rank_among_historical_mean_ranks,
         }
 
         self.feature_array_map = {
             "session_id": self.session_id,
+            "timestamps": self.timestamps,
+            "platform": self.platform,
+            "device": self.device,
+            "active_filters": self.active_filters,
+            "hour": self.hour,
+            "day_of_the_week": self.day_of_the_week,
+            "cheapest": self.cheapest,
+            "most_expensive": self.most_expensive,
+            "impressions_max_price": self.impressions_max_price,
+            "impressions_min_price": self.impressions_min_price,
+            "impressions_price_range": self.impressions_price_range,
+            "num_of_impressions": self.num_of_impressions,
+            "price_rel_to_imp_min": self.price_rel_to_imp_min,
+            "price_rel_to_imp_max": self.price_rel_to_imp_max,
+            "rank": self.rank,
+            "price_rank": self.price_rank,
+            "price_rank_among_above": self.price_rank_among_above,
             "session_start_ts": self.session_start_ts,
             "price_vs_mean_price": self.price_vs_mean_price,
             "clickout_item_item_last_timestamp": self.clickout_item_item_last_timestamp,
-            "rank": self.rank,
             "previous_click_price_diff_session": self.previous_click_price_diff_session,
-            "top_of_impression": self.top_of_impression,  # 7595 it/s
-            "price_rank": self.price_rank,  # 7047 it/s
-            "price_rank_among_above": self.price_rank_among_above,  # 6640 it/s
+            "top_of_impression": self.top_of_impression,
             "num_of_item_actions": self.num_of_item_actions,
             "price_rank_diff_last_interaction": self.price_rank_diff_last_interaction,  # 5582 it/s
             "last_interaction_relative_position": self.last_interaction_relative_position,
@@ -127,14 +161,10 @@ class CurrentSessionFeatures:
             "last_action_type": self.last_action_type,
             "price_above": self.price_above,
             "clickout_prob_time_position_offset": self.clickout_prob_time_position_offset,
-            "platform": self.platform,
-            "device": self.device,
-            "active_filters": self.active_filters,
-            "hour": self.hour,
-            "day_of_the_week": self.day_of_the_week,
-            "cheapest": self.cheapest,
-            "most_expensive": self.most_expensive,
-            "timestamps": self.timestamps,
+            # "price_rel_to_hist_min": self.update_price_rel_to_hist_min,
+            # "price_rel_to_hist_max": self.update_price_rel_to_hist_max,
+            # "historical_mean_rank": self.update_historical_mean_rank,
+            # "rank_among_historical_mean_ranks": self.update_rank_among_historical_mean_ranks,
         }
 
         self.feature_names = list(self.feature_array_map.keys())
@@ -293,36 +323,54 @@ class CurrentSessionFeatures:
     def update_timestamps(self):
         self.timestamps.append(self.timestamp)
 
+    def update_impressions_max_price(self):
+        self.impressions_max_price.append(max(self.current_prices))
+
+    def update_impressions_min_price(self):
+        self.impressions_min_price.append(min(self.current_prices))
+
+    def update_impressions_price_range(self):
+        self.impressions_price_range.append(
+            self.impressions_max_price[-1] - self.impressions_min_price[-1]
+        )
+
+    def update_num_of_impressions(self):
+        self.num_of_impressions.append(len(self.current_impressions))
+
+    def update_price_rel_to_imp_min(self):
+        imp_min = min(self.current_prices)
+
+        self.price_rel_to_imp_min.append("|".join(
+            [
+                str(normalize_float(pri/imp_min)) for pri in self.current_prices
+            ]
+        ))
+
+    def update_price_rel_to_imp_max(self):
+        imp_max = max(self.current_prices)
+
+        self.price_rel_to_imp_max.append("|".join(
+            [
+                str(normalize_float(pri / imp_max)) for pri in self.current_prices
+            ]
+        ))
+
+    def update_price_rel_to_hist_min(self):
+        pass
+
+    def update_price_rel_to_hist_max(self):
+        pass
+
+    def update_historical_mean_rank(self):
+        pass
+
+    def update_rank_among_historical_mean_ranks(self):
+        pass
+
     def invalid_session_handler(self):
         self.session_id.append(self.current_session_id)
-        self.session_start_ts.append(None)
-        self.price_vs_mean_price.append(None)
-        self.clickout_item_item_last_timestamp.append(None)
-        self.rank.append(None)
-        self.previous_click_price_diff_session.append(None)
-        self.time_since_last_image_interaction.append(None)
-        self.top_of_impression.append(None)
-        self.price_rank.append(None)
-        self.price_rank_among_above.append(None)
-        self.num_of_item_actions.append(None)
-        self.price_rank_diff_last_interaction.append(None)
-        self.last_interaction_relative_position.append(None)
-        self.last_interaction_absolute_position.append(None)
-        self.actions_since_last_item_action.append(None)
-        self.time_since_last_item_action.append(None)
-        self.same_impressions_in_session.append(None)
-        self.step.append(None)
-        self.last_action_type.append(None)
-        self.price_above.append(None)
-        self.clickout_prob_time_position_offset.append(None)
-        self.platform.append(None)
-        self.device.append(None)
-        self.active_filters.append(None)
-        self.hour.append(None)
-        self.day_of_the_week.append(None)
-        self.cheapest.append(None)
-        self.most_expensive.append(None)
-        self.timestamps.append(None)
+        for feat in self.feature_names[1:]:
+            self.feature_array_map[feat].append(None)
 
     def run_updaters(self, feature_subset=None):
         if not self.current_session_valid:
@@ -391,7 +439,10 @@ class CurrentSessionFeatures:
             for feat, values in self.feature_array_map.items():
                 print(feat, len(values))
                 as_df[feat] = values
-            as_df.to_csv(self.write_path)
+            as_df.rename(columns={
+                "timestamps": "timestamp",
+
+            }).to_csv(self.write_path)
 
 
 if __name__ == "__main__":
