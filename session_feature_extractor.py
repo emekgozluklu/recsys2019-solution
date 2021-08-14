@@ -6,9 +6,12 @@ from tqdm import tqdm
 from itertools import groupby
 from collections import defaultdict
 from constants import ITEM_ACTIONS
+import joblib
+import arrow
 
 EVENTS_PATH = os.path.join("data", "events.csv")
 SAVE_PATH = os.path.join("data", "session_features.csv")
+CLICK_PROBS_PATH = os.path.join("data", "click_probs_by_index.joblib")
 
 DUMMY = -1000
 
@@ -22,6 +25,7 @@ class CurrentSessionFeatures:
         self.data_sorted = self.data if self.sorted else None
         self.num_of_sessions = num_of_sessions
         self.write_path = write_path
+        self.clickout_probs = joblib.load(CLICK_PROBS_PATH)
 
         self.item_prices = DictReader(open("data/item_prices.csv"))
 
@@ -33,6 +37,8 @@ class CurrentSessionFeatures:
         self.current_session_item_actions = None
         self.current_impressions = None
         self.current_prices = None
+        self.datetime = None
+        self.timestamp = None
 
         self.session_id = []  # added
         self.session_start_ts = []  # added
@@ -59,16 +65,15 @@ class CurrentSessionFeatures:
         self.last_action_type = []  # added
         self.price_above = []  # added
         self.price_diff_from_estimated_budget = []
-        self.impression_prices = []
-        self.impressions = []
-        self.clickout_prob_time_position_offset = []
-        self.platform = []
-        self.device = []
-        self.active_filters = []
-        self.hour = []
-        self.day_of_the_week = []
-        self.cheapest = []
-        self.most_expensive = []
+        self.clickout_prob_time_position_offset = []  # added
+        self.platform = []  # added
+        self.device = []  # added
+        self.active_filters = []  # added
+        self.hour = []  # added
+        self.day_of_the_week = []  # added
+        self.cheapest = []  # added
+        self.most_expensive = []  # added
+        self.timestamps = []
 
         self.feature_updater_map = {
             "session_id": self.update_session_id,
@@ -90,8 +95,6 @@ class CurrentSessionFeatures:
             "step": self.update_step,
             "last_action_type": self.update_last_action_type,
             "price_above": self.update_price_above,
-            "impression_prices": self.update_impression_prices,
-            "impressions": dummy_function,
             "clickout_prob_time_position_offset": self.update_clickout_prob_time_position_offset,
             "platform": self.update_platform,
             "device": self.update_device,
@@ -100,6 +103,7 @@ class CurrentSessionFeatures:
             "day_of_the_week": self.update_day_of_the_week,
             "cheapest": self.update_cheapest,
             "most_expensive": self.update_most_expensive,
+            "timestamps": self.update_timestamps,
         }
 
         self.feature_array_map = {
@@ -122,8 +126,6 @@ class CurrentSessionFeatures:
             "step": self.step,
             "last_action_type": self.last_action_type,
             "price_above": self.price_above,
-            "impression_prices": self.impression_prices,
-            "impressions": self.impressions,
             "clickout_prob_time_position_offset": self.clickout_prob_time_position_offset,
             "platform": self.platform,
             "device": self.device,
@@ -132,6 +134,7 @@ class CurrentSessionFeatures:
             "day_of_the_week": self.day_of_the_week,
             "cheapest": self.cheapest,
             "most_expensive": self.most_expensive,
+            "timestamps": self.timestamps,
         }
 
         self.feature_names = list(self.feature_array_map.keys())
@@ -249,34 +252,46 @@ class CurrentSessionFeatures:
     def update_price_above(self):
         self.price_above.append("|".join([str(self.current_prices[0])] + list(map(str, self.current_prices[:-1]))))
 
-    def update_impression_prices(self):
-        self.impression_prices.append(self.current_session_clickouts[-1]["prices"])
-        self.impressions.append(self.current_session_clickouts[-1]["impressions"])
-
     def update_clickout_prob_time_position_offset(self):
-        pass
+        time_diff = self.clickout_item_item_last_timestamp[-1]
+        if time_diff == DUMMY or time_diff is None or time_diff > 120:
+            self.clickout_prob_time_position_offset.append("|".join(["0"]*25))
+        else:
+            grouped_time_diff = group_time(time_diff)
+            probs = [self.clickout_probs[(ind, grouped_time_diff)] for ind in range(len(self.current_impressions))]
+            self.clickout_prob_time_position_offset.append("|".join(map(str, probs)))
 
     def update_platform(self):
-        pass
+        self.platform.append(self.current_session_clickouts[-1]["platform"])
 
     def update_device(self):
-        pass
+        self.device.append(self.current_session_clickouts[-1]["device"])
 
     def update_active_filters(self):
-        pass
+        currently_active_filters = "|".join(
+            [
+                i["reference"]
+                for i in filter(lambda x: x["action_type"] == "filter selection", self.current_session)
+            ]
+        )
+        self.active_filters.append(currently_active_filters)
 
     def update_hour(self):
-        pass
+        self.hour.append(self.datetime.hour)
 
     def update_day_of_the_week(self):
-        pass
+        self.day_of_the_week.append(self.datetime.weekday())
 
     def update_cheapest(self):
-        pass
+        cheapest = min(self.current_prices)
+        self.cheapest.append("|".join(["1" if pri == cheapest else "0" for pri in self.current_prices]))
 
     def update_most_expensive(self):
-        pass
+        exp = max(self.current_prices)
+        self.most_expensive.append("|".join(["1" if pri == exp else "0" for pri in self.current_prices]))
 
+    def update_timestamps(self):
+        self.timestamps.append(self.timestamp)
 
     def invalid_session_handler(self):
         self.session_id.append(self.current_session_id)
@@ -299,8 +314,6 @@ class CurrentSessionFeatures:
         self.step.append(None)
         self.last_action_type.append(None)
         self.price_above.append(None)
-        self.impressions.append(None)
-        self.impression_prices.append(None)
         self.clickout_prob_time_position_offset.append(None)
         self.platform.append(None)
         self.device.append(None)
@@ -309,6 +322,7 @@ class CurrentSessionFeatures:
         self.day_of_the_week.append(None)
         self.cheapest.append(None)
         self.most_expensive.append(None)
+        self.timestamps.append(None)
 
     def run_updaters(self, feature_subset=None):
         if not self.current_session_valid:
@@ -341,7 +355,6 @@ class CurrentSessionFeatures:
                 filter(lambda x: x["action_type"] == "clickout item", self.current_session))
             self.current_session_item_actions = list(
                 filter(lambda x: (x["action_type"] in ITEM_ACTIONS and x["reference"] != "unknown"), self.current_session))
-
             if len(self.current_session_clickouts) == 0:
                 self.invalid_session_ids.append(sess_id)
                 self.current_session_valid = False
@@ -353,8 +366,10 @@ class CurrentSessionFeatures:
                     break
 
             if self.current_session_valid:
+                self.datetime = arrow.get(int(self.current_session_clickouts[-1]["timestamp"]))
                 self.current_impressions = list(map(int, self.current_session_clickouts[-1]["impressions"].split("|")))
                 self.current_prices = list(map(int, self.current_session_clickouts[-1]["prices"].split("|")))
+                self.timestamp = self.current_session_clickouts[-1]["timestamp"]
 
             self.run_updaters()
             self.current_session_index += 1
@@ -364,7 +379,7 @@ class CurrentSessionFeatures:
     def save_features(self):
         as_df = pd.DataFrame(columns=self.feature_names)
         for feat, values in self.feature_array_map.items():
-            print(feat,len(values))
+            print(feat, len(values))
             as_df[feat] = values
         as_df.to_csv(self.write_path)
 
@@ -372,6 +387,4 @@ class CurrentSessionFeatures:
 if __name__ == "__main__":
     csfe = CurrentSessionFeatures("data/events_sorted.csv", events_sorted=True)
     csfe.extract_features()
-    print(csfe.invalid_session_ids)
-    print("Saving...")
-    # csfe.save_features()
+    csfe.save_features()
