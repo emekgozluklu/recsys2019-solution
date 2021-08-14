@@ -242,6 +242,15 @@ class UserFeatures:
                 last_clickouts[co["session_id"]] = co
         return list(last_clickouts.values())
 
+    def validate_data(self):
+        lengths = set()
+        for feat in self.feature_names:
+            lengths.add(len(self.feature_array_map[feat]))
+            if len(lengths) != 1:
+                print(f"A size inconsistency occured at {feat}")
+                return 0
+        return 1
+
     def extract_features(self):
         print("extracting user features.")
         self.data_sorted = sorted(self.data, key=lambda x: (x["user_id"], ["timestamp"]))
@@ -311,15 +320,15 @@ class UserFeatures:
                         )
 
     def save_features(self):
-        as_df = pd.DataFrame(columns=self.feature_names)
-        for feat, values in self.feature_array_map.items():
-            print(feat, len(values))
-            as_df[feat] = values
-        as_df.to_csv(self.write_path)
+        if self.validate_data():
+            print("Data valid, writing to csv.")
+            as_df = pd.DataFrame(columns=self.feature_names)
+            for feat, values in self.feature_array_map.items():
+                as_df[feat] = values
+            as_df.to_csv(self.write_path)
 
 
 if __name__ == "__main__":
-    print("No action yet.")
     ufe = UserFeatures("data/events_sorted.csv", events_sorted=True)
     ufe.extract_features()
     ufe.save_features()

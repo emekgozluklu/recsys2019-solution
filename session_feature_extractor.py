@@ -376,12 +376,22 @@ class CurrentSessionFeatures:
             self.current_session_valid = True
         print("extraction completed.")
 
+    def validate_data(self):
+        lengths = set()
+        for feat in self.feature_names:
+            lengths.add(len(self.feature_array_map[feat]))
+            if len(lengths) != 1:
+                print(f"A size inconsistency occured at {feat}")
+                return 0
+        return 1
+
     def save_features(self):
-        as_df = pd.DataFrame(columns=self.feature_names)
-        for feat, values in self.feature_array_map.items():
-            print(feat, len(values))
-            as_df[feat] = values
-        as_df.to_csv(self.write_path)
+        if self.validate_data():
+            as_df = pd.DataFrame(columns=self.feature_names)
+            for feat, values in self.feature_array_map.items():
+                print(feat, len(values))
+                as_df[feat] = values
+            as_df.to_csv(self.write_path)
 
 
 if __name__ == "__main__":
