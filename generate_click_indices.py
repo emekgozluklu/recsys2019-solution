@@ -3,18 +3,11 @@
 
 from collections import defaultdict
 from itertools import groupby
-
+from helpers import group_time
 import joblib
 import pandas as pd
 from tqdm import tqdm
 import os
-
-
-def group_time(t):
-    if t <= 12:
-        return t
-    else:
-        return int(t / 4) * 4
 
 
 print("Reading")

@@ -38,5 +38,17 @@ def dummy_function():
 def clickout_filter(x):
     return x["action_type"] == "clickout item"
 
+
 def get_dataframe_memory_usage(df):
     return df.memory_usage(deep=True).sum() * 10**(-9)
+
+
+def group_time(t):
+    if t <= 12:
+        return t
+    else:
+        return int(t / 4) * 4
+
+
+def normalize_float(fl):
+    return round(fl, 4)
