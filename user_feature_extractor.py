@@ -90,24 +90,25 @@ class UserFeatures:
             "clickout_timestamp": dummy_function,
         }
         self.feature_array_map = {
-            "last_price_diff_general": self.last_price_diff_general,
-            "avg_price_similarity": self.avg_price_similarity,
+            "clickout_user_id": self.clickout_user_id,
+            "clickout_timestamp": self.clickout_timestamp,
+            "clickout_session_id": self.clickout_session_id,
+
             "user_start_ts": self.user_start_ts,
             "sessions_of_user": self.sessions_of_user,
             # "global_avg_price_rank": self.global_avg_price_rank,
             "viewed_items_user": self.viewed_items_user,
+            "item_clicked_before": self.item_clicked_before,
+            "avg_price_similarity": self.avg_price_similarity,
             "interacted_items_user": self.interacted_items_user,
             "viewed_items_avg_price": self.viewed_items_avg_price,
+            "last_price_diff_general": self.last_price_diff_general,
             "interacted_items_avg_price": self.interacted_items_avg_price,
-            "viewed_items_avg_price_diff": self.viewed_items_avg_price_diff,
-            "interacted_items_avg_price_diff": self.interacted_items_avg_price_diff,
             "viewed_items_avg_price_div": self.viewed_items_avg_price_div,
+            "viewed_items_avg_price_diff": self.viewed_items_avg_price_diff,
             "interacted_items_avg_price_div": self.interacted_items_avg_price_div,
+            "interacted_items_avg_price_diff": self.interacted_items_avg_price_diff,
             "interacted_and_viewed_items_price_diff": self.interacted_and_viewed_items_price_diff,
-            "item_clicked_before": self.item_clicked_before,
-            "clickout_user_id": self.clickout_user_id,
-            "clickout_session_id": self.clickout_session_id,
-            "clickout_timestamp": self.clickout_timestamp,
         }
 
         self.feature_names = list(self.feature_array_map.keys())
@@ -325,7 +326,11 @@ class UserFeatures:
             as_df = pd.DataFrame(columns=self.feature_names)
             for feat, values in self.feature_array_map.items():
                 as_df[feat] = values
-            as_df.to_csv(self.write_path)
+            as_df.rename(columns={
+                "clickout_user_id": "user_id",
+                "clickout_timestamp": "timestamp",
+                "clickout_session_id": "session_id",
+            }).to_csv(self.write_path)
 
 
 if __name__ == "__main__":
