@@ -84,6 +84,8 @@ class CurrentSessionFeatures:
         self.price_rel_to_hist_max = []
         self.historical_mean_rank = []
         self.rank_among_historical_mean_ranks = []
+        self.price = []
+        self.item_id = []
 
         self.feature_updater_map = {
             "session_id": self.update_session_id,
@@ -120,6 +122,8 @@ class CurrentSessionFeatures:
             "num_of_impressions": self.update_num_of_impressions,
             "price_rel_to_imp_min": self.update_price_rel_to_imp_min,
             "price_rel_to_imp_max": self.update_price_rel_to_imp_max,
+            "price": self.update_price,
+            "item_id": self.update_item_id,
             # "price_rel_to_hist_min": self.price_rel_to_hist_min,
             # "price_rel_to_hist_max": self.price_rel_to_hist_max,
             # "historical_mean_rank": self.historical_mean_rank,
@@ -134,6 +138,8 @@ class CurrentSessionFeatures:
             "active_filters": self.active_filters,
             "hour": self.hour,
             "day_of_the_week": self.day_of_the_week,
+            "price": self.price,
+            "item_id": self.item_id,
             "cheapest": self.cheapest,
             "most_expensive": self.most_expensive,
             "impressions_max_price": self.impressions_max_price,
@@ -190,7 +196,7 @@ class CurrentSessionFeatures:
                 int(self.current_session_clickouts[-2]["timestamp"])
             )
         else:
-            self.clickout_item_item_last_timestamp.append(DUMMY)
+            self.clickout_item_item_last_timestamp.append(0)
 
     def update_rank(self):
         self.rank.append("|".join([str(j+1) for j in range(len(self.current_impressions))]))
@@ -207,7 +213,7 @@ class CurrentSessionFeatures:
 
             self.previous_click_price_diff_session.append("|".join(map(str, price_diffs)))
         else:
-            self.previous_click_price_diff_session.append(DUMMY)
+            self.previous_click_price_diff_session.append("|".join(["0"]*len(self.current_prices)))
 
     def update_time_since_last_image_interaction(self):
         image_interactions = list(filter(lambda x: x["action_type"] == "interaction item image", self.current_session))
@@ -216,7 +222,7 @@ class CurrentSessionFeatures:
             current_clickout_time = int(self.current_session_clickouts[-1]["timestamp"])
             self.time_since_last_image_interaction.append(current_clickout_time - last_image_interaction_time)
         else:
-            self.time_since_last_image_interaction.append(DUMMY)
+            self.time_since_last_image_interaction.append(0)
 
     def update_top_of_impression(self):
         self.top_of_impression.append("1|" + "|".join(["0"] * (len(self.current_impressions) - 1)))
@@ -249,7 +255,7 @@ class CurrentSessionFeatures:
             self.last_interaction_relative_position.append("|".join(["0"]*len(self.current_impressions)))
             self.last_interaction_absolute_position.append(0)
             self.actions_since_last_item_action.append(len(self.current_session) - 1)
-            self.time_since_last_item_action.append(1000)
+            self.time_since_last_item_action.append(0)
             return
 
         prev_item = int(self.current_session_item_actions[-2]["reference"])
@@ -285,10 +291,13 @@ class CurrentSessionFeatures:
     def update_clickout_prob_time_position_offset(self):
         time_diff = self.clickout_item_item_last_timestamp[-1]
         if time_diff == DUMMY or time_diff is None or time_diff > 120:
-            self.clickout_prob_time_position_offset.append("|".join(["0"]*25))
+            self.clickout_prob_time_position_offset.append("|".join(["0"]*len(self.current_impressions)))
         else:
             grouped_time_diff = group_time(time_diff)
-            probs = [self.clickout_probs[(ind, grouped_time_diff)] for ind in range(len(self.current_impressions))]
+            probs = [
+                normalize_float(self.clickout_probs[(ind, grouped_time_diff)])
+                for ind in range(len(self.current_impressions))
+            ]
             self.clickout_prob_time_position_offset.append("|".join(map(str, probs)))
 
     def update_platform(self):
@@ -366,6 +375,12 @@ class CurrentSessionFeatures:
 
     def update_rank_among_historical_mean_ranks(self):
         pass
+
+    def update_price(self):
+        self.price.append("|".join((str(x) for x in self.current_prices)))
+
+    def update_item_id(self):
+        self.item_id.append("|".join((str(x) for x in self.current_impressions)))
 
     def invalid_session_handler(self):
         self.session_id.append(self.current_session_id)
