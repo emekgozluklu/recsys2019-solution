@@ -27,6 +27,7 @@ class UserFeatures:
         self.user_id = -1
 
         self.user_data = None
+        self.dummy = None
 
         self.current_impressions = None
         self.current_prices = None
@@ -118,7 +119,7 @@ class UserFeatures:
             last_co_price = int(self.user_clicked_item_prices[-1])
             self.last_price_diff_general.append("|".join([str(pri - last_co_price) for pri in self.current_prices]))
         else:
-            self.last_price_diff_general.append(DUMMY)
+            self.last_price_diff_general.append(self.dummy)
 
     def update_avg_price_similarity(self):
         if len(self.user_clicked_item_prices) > 0:
@@ -126,7 +127,7 @@ class UserFeatures:
             self.avg_price_similarity.append(
                 "|".join(str(normalize_float(pri-avg_price)) for pri in self.current_prices))
         else:
-            self.avg_price_similarity.append(DUMMY)
+            self.avg_price_similarity.append(self.dummy)
 
     def update_user_start_ts(self):
         self.user_start_ts.append(
@@ -150,13 +151,13 @@ class UserFeatures:
         if len(self.user_clicked_item_prices) > 0:
             self.viewed_items_avg_price.append(normalize_float(np.mean(self.user_clicked_item_prices)))
         else:
-            self.viewed_items_avg_price.append(DUMMY)
+            self.viewed_items_avg_price.append(0)  # DUMMY
 
     def update_interacted_items_avg_price(self):
         if len(self.user_interacted_item_prices) > 0:
             self.interacted_items_avg_price.append(np.mean(self.user_interacted_item_prices))
         else:
-            self.interacted_items_avg_price.append(DUMMY)
+            self.interacted_items_avg_price.append(0)  # DUMMY
 
     def update_viewed_items_avg_price_diff(self):
         if len(self.user_clicked_item_prices) > 0:
@@ -165,7 +166,7 @@ class UserFeatures:
                 "|".join([str(normalize_float(pri - avg)) for pri in self.current_prices])
             )
         else:
-            self.viewed_items_avg_price_diff.append(DUMMY)
+            self.viewed_items_avg_price_diff.append(self.dummy)
 
     def update_interacted_items_avg_price_diff(self):
         if len(self.user_interacted_item_prices) > 0:
@@ -174,7 +175,7 @@ class UserFeatures:
                 "|".join([str(normalize_float(pri - avg)) for pri in self.current_prices])
             )
         else:
-            self.interacted_items_avg_price_diff.append(DUMMY)
+            self.interacted_items_avg_price_diff.append(self.dummy)
 
     def update_viewed_items_avg_price_div(self):
         if len(self.user_clicked_item_prices) > 0:
@@ -183,21 +184,21 @@ class UserFeatures:
                 "|".join([str(normalize_float(pri/avg)) for pri in self.current_prices])
             )
         else:
-            self.viewed_items_avg_price_div.append(DUMMY)
+            self.viewed_items_avg_price_div.append(self.dummy)
 
     def update_interacted_items_avg_price_div(self):
         if len(self.user_interacted_item_prices) > 0:
             avg = np.mean(self.user_interacted_item_prices)
 
             if avg == 0:
-                self.interacted_items_avg_price_div.append(DUMMY)
+                self.interacted_items_avg_price_div.append(self.dummy)
                 return
 
             self.interacted_items_avg_price_div.append(
                 "|".join([str(normalize_float(pri/avg)) for pri in self.current_prices])
             )
         else:
-            self.interacted_items_avg_price_div.append(DUMMY)
+            self.interacted_items_avg_price_div.append(self.dummy)
 
     def update_interacted_and_viewed_items_price_diff(self):
         if len(self.user_interacted_item_prices) > 0 and len(self.user_clicked_item_prices) > 0:
@@ -205,7 +206,7 @@ class UserFeatures:
             click_avg = np.mean(self.user_clicked_item_prices)
             self.interacted_and_viewed_items_price_diff.append(abs(int_avg - click_avg))
         else:
-            self.interacted_and_viewed_items_price_diff.append(DUMMY)
+            self.interacted_and_viewed_items_price_diff.append(0)  # DUMMY
 
     def update_item_clicked_before(self):
         self.item_clicked_before.append("|".join([str(int(imp_id in self.user_interacted_items)) for imp_id in self.current_impressions]))
@@ -296,6 +297,8 @@ class UserFeatures:
                     self.current_prices = list(map(int, prices))
                     self.current_reference = int(reference)
                     self.current_action = action
+
+                    self.dummy = "|".join(["0"] * len(self.current_prices))
 
                     # it is important to run updaters before accumulated feature get updated
                     # we do not want to use current reference yet.
