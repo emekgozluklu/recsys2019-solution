@@ -8,7 +8,6 @@ import pandas as pd
 import numpy as np
 from helpers import normalize_float, dummy_function
 
-EVENTS_PATH = os.path.join("data", "events.csv")
 
 DUMMY = -1000
 
@@ -255,7 +254,7 @@ class UserFeatures:
 
     def extract_features(self):
         print("extracting user features.")
-        self.data_sorted = sorted(self.data, key=lambda x: (x["user_id"], ["timestamp"]))
+        self.data_sorted = sorted(self.data, key=lambda x: (x["user_id"], int(x["timestamp"])))
         self.sorted = True
 
         for user_id, user_actions in tqdm(groupby(self.data_sorted, lambda x: x["user_id"])):

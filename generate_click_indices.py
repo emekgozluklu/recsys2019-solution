@@ -11,7 +11,7 @@ import os
 
 
 print("Reading")
-df = pd.read_csv(os.path.join("data", "events.csv"))
+df = pd.read_csv(os.path.join("data", "events_sorted.csv"))
 
 print("Filtering")
 clickouts_df = df[(df["action_type"] == "clickout item") & (~df["reference"].isnull())].copy(deep=True)

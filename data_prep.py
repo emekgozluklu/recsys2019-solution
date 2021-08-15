@@ -8,7 +8,7 @@ TRAIN_DATA_PATH = os.path.join("data","train.csv")
 TEST_DATA_PATH = os.path.join("data", "test.csv")
 METADATA_FILEPATH = os.path.join("data","item_metadata.csv")
 SAMPLED_DATA_PATH = os.path.join("data", "sampled", "train_sample.csv")
-EVENTS_WRITE_PATH = os.path.join("data", "events.csv")
+EVENTS_WRITE_PATH = os.path.join("data", "events_sorted.csv")
 
 train_data = pd.read_csv(TRAIN_DATA_PATH)
 test_data = pd.read_csv(TEST_DATA_PATH)
@@ -56,4 +56,4 @@ events = pd.merge(events, last_clickouts_in_validation, on=["user_id", "session_
 events["is_val"].fillna(0, inplace=True)
 events["is_val"] = events["is_val"].astype(int)
 
-events.to_csv(EVENTS_WRITE_PATH)
+events.sort_values(["session_id", "timestamp"]).to_csv(EVENTS_WRITE_PATH)

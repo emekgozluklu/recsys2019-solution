@@ -9,7 +9,6 @@ from constants import ITEM_ACTIONS
 import joblib
 import arrow
 
-EVENTS_PATH = os.path.join("data", "events.csv")
 SAVE_PATH = os.path.join("data", "session_features.csv")
 CLICK_PROBS_PATH = os.path.join("data", "click_probs_by_index.joblib")
 
@@ -405,7 +404,7 @@ class CurrentSessionFeatures:
         print("Extracting features.")
         if not self.sorted:
             print("Sorting started...")
-            self.data_sorted = sorted(self.data, key=lambda x: (x["session_id"], x["timestamp"]))
+            self.data_sorted = sorted(self.data, key=lambda x: (x["session_id"], int(x["timestamp"])))
             self.sorted = True
             del self.data
             print("Sorting done...")

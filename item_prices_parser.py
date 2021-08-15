@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import numpy as np
 
-EVENTS_PATH = os.path.join("data", "events.csv")
+EVENTS_PATH = os.path.join("data", "events_sorted.csv")
 
 events = pd.read_csv(EVENTS_PATH, index_col=0)
 
