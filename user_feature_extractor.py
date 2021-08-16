@@ -322,17 +322,25 @@ class UserFeatures:
                             else self.mean_item_prices[int(reference)]
                         )
 
+    def generate_features_df(self):
+        as_df = pd.DataFrame(columns=self.feature_names)
+        for feat, values in self.feature_array_map.items():
+            as_df[feat] = values
+        return as_df.rename(columns={
+            "clickout_user_id": "user_id",
+            "clickout_timestamp": "timestamp",
+            "clickout_session_id": "session_id",
+        })
+
     def save_features(self):
         if self.validate_data():
             print("Data valid, writing to csv.")
-            as_df = pd.DataFrame(columns=self.feature_names)
-            for feat, values in self.feature_array_map.items():
-                as_df[feat] = values
-            as_df.rename(columns={
-                "clickout_user_id": "user_id",
-                "clickout_timestamp": "timestamp",
-                "clickout_session_id": "session_id",
-            }).to_csv(self.write_path)
+            df = self.generate_features_df()
+            df.to_csv(self.write_path)
+
+    def get_features(self):
+        if self.validate_data():
+            return self.generate_features_df()
 
 
 if __name__ == "__main__":
