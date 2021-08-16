@@ -141,10 +141,10 @@ class UserFeatures:
         pass
 
     def update_viewed_items_user(self):
-        self.viewed_items_user.append("|".join(["1" if self.current_reference in self.user_clicked_items else "0"]))
+        self.viewed_items_user.append("|".join(["1" if ref in self.user_clicked_items else "0" for ref in self.current_impressions]))
 
     def update_interacted_items_user(self):
-        self.interacted_items_user.append("|".join(["1" if self.current_reference in self.user_interacted_items else "0"]))
+        self.interacted_items_user.append("|".join(["1" if ref in self.user_interacted_items else "0" for ref in self.current_impressions]))
 
     def update_viewed_items_avg_price(self):
         if len(self.user_clicked_item_prices) > 0:
