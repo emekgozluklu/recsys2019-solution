@@ -469,12 +469,21 @@ class SessionFeatures:
         if self.validate_data():
             as_df = pd.DataFrame(columns=self.feature_names)
             for feat, values in self.feature_array_map.items():
-                print(feat, len(values))
                 as_df[feat] = values
             as_df.rename(columns={
                 "timestamps": "timestamp",
 
             }).to_csv(self.write_path)
+
+    def get_features(self):
+        if self.validate_data():
+            as_df = pd.DataFrame(columns=self.feature_names)
+            for feat, values in self.feature_array_map.items():
+                as_df[feat] = values
+            return as_df.rename(columns={
+                "timestamps": "timestamp",
+
+            })
 
 
 if __name__ == "__main__":
