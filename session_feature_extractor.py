@@ -15,9 +15,9 @@ CLICK_PROBS_PATH = os.path.join("data", "click_probs_by_index.joblib")
 DUMMY = -1000
 
 
-class CurrentSessionFeatures:
+class SessionFeatures:
 
-    def __init__(self, data_path, write_path="data/session_features.csv", num_of_sessions=50000, events_sorted=False):
+    def __init__(self, data_path="data/events_sorted.csv", write_path="data/session_features.csv", num_of_sessions=50000, events_sorted=False):
 
         self.data = DictReader(open(data_path, encoding='utf-8'))
         self.sorted = events_sorted
@@ -38,6 +38,8 @@ class CurrentSessionFeatures:
         self.current_prices = None
         self.datetime = None
         self.timestamp = None
+        self.reference = None
+        self.current_city = None
 
         self.session_id = []  # added
         self.session_start_ts = []  # added
@@ -85,6 +87,9 @@ class CurrentSessionFeatures:
         self.rank_among_historical_mean_ranks = []
         self.price = []
         self.item_id = []
+        self.city = []
+
+        self.clicked = []
 
         self.feature_updater_map = {
             "session_id": self.update_session_id,
@@ -123,6 +128,8 @@ class CurrentSessionFeatures:
             "price_rel_to_imp_max": self.update_price_rel_to_imp_max,
             "price": self.update_price,
             "item_id": self.update_item_id,
+            "clicked": self.update_clicked,
+            "city": self.update_city,
             # "price_rel_to_hist_min": self.price_rel_to_hist_min,
             # "price_rel_to_hist_max": self.price_rel_to_hist_max,
             # "historical_mean_rank": self.historical_mean_rank,
@@ -138,6 +145,7 @@ class CurrentSessionFeatures:
             "hour": self.hour,
             "day_of_the_week": self.day_of_the_week,
             "price": self.price,
+            "city": self.city,
             "item_id": self.item_id,
             "cheapest": self.cheapest,
             "most_expensive": self.most_expensive,
@@ -170,6 +178,8 @@ class CurrentSessionFeatures:
             # "price_rel_to_hist_max": self.update_price_rel_to_hist_max,
             # "historical_mean_rank": self.update_historical_mean_rank,
             # "rank_among_historical_mean_ranks": self.update_rank_among_historical_mean_ranks,
+
+            "clicked": self.clicked,
         }
 
         self.feature_names = list(self.feature_array_map.keys())
@@ -381,6 +391,12 @@ class CurrentSessionFeatures:
     def update_item_id(self):
         self.item_id.append("|".join((str(x) for x in self.current_impressions)))
 
+    def update_clicked(self):
+        self.clicked.append("|".join(["1" if item_id == self.reference else "0" for item_id in self.current_impressions]))
+
+    def update_city(self):
+        self.city.append(self.current_city)
+
     def invalid_session_handler(self):
         self.session_id.append(self.current_session_id)
         for feat in self.feature_names[1:]:
@@ -432,6 +448,8 @@ class CurrentSessionFeatures:
                 self.current_impressions = list(map(int, self.current_session_clickouts[-1]["impressions"].split("|")))
                 self.current_prices = list(map(int, self.current_session_clickouts[-1]["prices"].split("|")))
                 self.timestamp = self.current_session_clickouts[-1]["timestamp"]
+                self.reference = int(self.current_session_clickouts[-1]["reference"])
+                self.current_city = self.current_session_clickouts[-1]["city"]
 
             self.run_updaters()
             self.current_session_index += 1
@@ -460,6 +478,6 @@ class CurrentSessionFeatures:
 
 
 if __name__ == "__main__":
-    csfe = CurrentSessionFeatures("data/events_sorted.csv", events_sorted=True)
+    csfe = SessionFeatures(events_sorted=True)
     csfe.extract_features()
     csfe.save_features()
