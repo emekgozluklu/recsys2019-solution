@@ -44,7 +44,6 @@ def generate_records(merged, to_be_split):
                 else:
                     record.append(col)
             records.append(tuple(record))
-    print("records created.")
     return records
 
 
@@ -69,7 +68,6 @@ def merge_session_and_user_features(session_features=None, user_features=None, s
     merged_valid = session_features.merge(user_features, how="left", on=["session_id", "timestamp"])
     to_be_split = get_cols_to_be_split(merged_valid)
 
-    print("splitting cols", to_be_split)
     for col in to_be_split:
         merged_valid[col] = list(merged_valid[col].str.split("|"))
 

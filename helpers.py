@@ -52,3 +52,7 @@ def group_time(t):
 
 def normalize_float(fl):
     return round(fl, 4)
+
+
+def normalize_feature_name(feature_name):
+    return feature_name.replace(" ", "_").lower()
