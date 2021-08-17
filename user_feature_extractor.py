@@ -55,8 +55,8 @@ class UserFeatures:
         self.user_start_ts = []
         self.sessions_of_user = []
         self.global_avg_price_rank = []
-        self.viewed_items_user = []
-        self.interacted_items_user = []
+        self.user_viewed_item = []
+        self.user_interacted_item = []
         self.viewed_items_avg_price = []
         self.interacted_items_avg_price = []
         self.viewed_items_avg_price_diff = []
@@ -75,8 +75,8 @@ class UserFeatures:
             "user_start_ts": self.update_user_start_ts,
             "sessions_of_user": self.update_sessions_of_user,
             # "global_avg_price_rank": self.update_global_avg_price_rank,
-            "viewed_items_user": self.update_viewed_items_user,
-            "interacted_items_user": self.update_interacted_items_user,
+            "user_viewed_item": self.update_user_viewed_item,
+            "user_interacted_item": self.update_user_interacted_item,
             "viewed_items_avg_price": self.update_viewed_items_avg_price,
             "interacted_items_avg_price": self.update_interacted_items_avg_price,
             "viewed_items_avg_price_diff": self.update_viewed_items_avg_price_diff,
@@ -97,10 +97,10 @@ class UserFeatures:
             "user_start_ts": self.user_start_ts,
             "sessions_of_user": self.sessions_of_user,
             # "global_avg_price_rank": self.global_avg_price_rank,
-            "viewed_items_user": self.viewed_items_user,
+            "user_viewed_item": self.user_viewed_item,
             "item_clicked_before": self.item_clicked_before,
             "avg_price_similarity": self.avg_price_similarity,
-            "interacted_items_user": self.interacted_items_user,
+            "user_interacted_item": self.user_interacted_item,
             "viewed_items_avg_price": self.viewed_items_avg_price,
             "last_price_diff_general": self.last_price_diff_general,
             "interacted_items_avg_price": self.interacted_items_avg_price,
@@ -140,11 +140,11 @@ class UserFeatures:
     def update_global_avg_price_rank(self):
         pass
 
-    def update_viewed_items_user(self):
-        self.viewed_items_user.append("|".join(["1" if ref in self.user_clicked_items else "0" for ref in self.current_impressions]))
+    def update_user_viewed_item(self):
+        self.user_viewed_item.append("|".join(["1" if ref in self.user_clicked_items else "0" for ref in self.current_impressions]))
 
-    def update_interacted_items_user(self):
-        self.interacted_items_user.append("|".join(["1" if ref in self.user_interacted_items else "0" for ref in self.current_impressions]))
+    def update_user_interacted_item(self):
+        self.user_interacted_item.append("|".join(["1" if ref in self.user_interacted_items else "0" for ref in self.current_impressions]))
 
     def update_viewed_items_avg_price(self):
         if len(self.user_clicked_item_prices) > 0:
@@ -154,7 +154,7 @@ class UserFeatures:
 
     def update_interacted_items_avg_price(self):
         if len(self.user_interacted_item_prices) > 0:
-            self.interacted_items_avg_price.append(np.mean(self.user_interacted_item_prices))
+            self.interacted_items_avg_price.append(normalize_float(np.mean(self.user_interacted_item_prices)))
         else:
             self.interacted_items_avg_price.append(0)  # DUMMY
 
@@ -253,7 +253,7 @@ class UserFeatures:
         return 1
 
     def extract_features(self):
-        print("extracting user features.")
+        # print("extracting user features.")
         self.data_sorted = sorted(self.data, key=lambda x: (x["user_id"], int(x["timestamp"])))
         self.sorted = True
 
@@ -334,7 +334,7 @@ class UserFeatures:
 
     def save_features(self):
         if self.validate_data():
-            print("Data valid, writing to csv.")
+            # print("Data valid, writing to csv.")
             df = self.generate_features_df()
             df.to_csv(self.write_path)
 
