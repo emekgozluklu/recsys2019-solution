@@ -271,14 +271,21 @@ class SessionFeatures:
         prev_item_pos = self.current_impressions.index(prev_item)
         price_ranks = get_price_ranks_from_prices_list(self.current_prices)
         prev_item_rank = price_ranks[prev_item_pos]
-        prev_action_step = int(self.current_session_item_actions[-2]["step"])
-        prev_action_ts = int(self.current_session_item_actions[-2]["timestamp"])
+
+        last_co_step = int(self.current_session_clickouts[-1]["step"])
+        last_co_ts = int(self.current_session_clickouts[-1]["timestamp"])
+
+        item_actions_before_co = list(filter(lambda x: int(x["step"]) < last_co_step, self.current_session_item_actions))
 
         self.price_rank_diff_last_interaction.append("|".join([str(r - prev_item_rank) for r in price_ranks]))
         self.last_interaction_relative_position.append("|".join([str(pos - prev_item_pos) for pos in range(len(self.current_impressions))]))
         self.last_interaction_absolute_position.append(prev_item_pos)
-        self.actions_since_last_item_action.append(int(self.current_session_clickouts[-1]["step"]) - prev_action_step - 1)
-        self.time_since_last_item_action.append(int(self.current_session_clickouts[-1]["timestamp"]) - prev_action_ts)
+        if item_actions_before_co:
+            self.actions_since_last_item_action.append(last_co_step - int(item_actions_before_co[-1]["step"]) - 1)
+            self.time_since_last_item_action.append(last_co_ts - int(item_actions_before_co[-1]["timestamp"]))
+        else:
+            self.actions_since_last_item_action.append(last_co_step - 1)
+            self.time_since_last_item_action.append(0)
 
     def update_same_impressions_in_session(self):
         same_impressions = filter(lambda x: x["impressions"] == self.current_session_clickouts[-1]["impressions"], self.current_session)
@@ -417,13 +424,13 @@ class SessionFeatures:
                 updater()
 
     def extract_features(self):
-        print("Extracting features.")
+        # print("Extracting features.")
         if not self.sorted:
-            print("Sorting started...")
+            # print("Sorting started...")
             self.data_sorted = sorted(self.data, key=lambda x: (x["session_id"], int(x["timestamp"])))
             self.sorted = True
             del self.data
-            print("Sorting done...")
+            # print("Sorting done...")
 
         for sess_id, sess in tqdm(groupby(self.data_sorted, lambda x: x["session_id"])):
 
@@ -454,7 +461,7 @@ class SessionFeatures:
             self.run_updaters()
             self.current_session_index += 1
             self.current_session_valid = True
-        print("extraction completed.")
+        # print("extraction completed.")
 
     def validate_data(self):
         lengths = set()
