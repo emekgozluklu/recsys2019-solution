@@ -6,8 +6,8 @@ COMMON_FEATURES = ['session_id', 'timestamp', 'platform', 'device', 'active_filt
                    'user_id', 'last_action_type', 'city', "step", "sessions_of_user", "viewed_items_avg_price",
                    "interacted_items_avg_price"]
 
-SESSION_FILE = os.path.join("data", "session_features.csv")
-USER_FILE = os.path.join("data", "user_features.csv")
+SESSION_FILE = os.path.join("../../data", "session_features.csv")
+USER_FILE = os.path.join("../../data", "user_features.csv")
 
 
 def test_dataframe_consistency(df, cols):
@@ -53,7 +53,7 @@ def reindex_column_to_end(columns, col):
     return columns
 
 
-def merge_session_and_user_features(session_features=None, user_features=None, save=True):
+def merge(session_features=None, user_features=None, save=True):
     if session_features is None:
         session_features = pd.read_csv(SESSION_FILE, index_col=0)
     if user_features is None:
@@ -82,10 +82,10 @@ def merge_session_and_user_features(session_features=None, user_features=None, s
     records_df = records_df[cols]
 
     if save:
-        records_df.to_csv("data/user_session_merged.csv")
+        records_df.to_csv("../../data/user_session_merged.csv")
 
     return records_df
 
 
 if __name__ == "__main__":
-    merge_session_and_user_features()
+    merge()

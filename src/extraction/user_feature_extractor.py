@@ -3,10 +3,10 @@ from csv import DictReader
 from tqdm import tqdm
 from itertools import groupby
 from collections import defaultdict
-from constants import ITEM_ACTIONS
+from src.constants import ITEM_ACTIONS
 import pandas as pd
 import numpy as np
-from helpers import normalize_float, dummy_function
+from src.helpers import normalize_float, dummy_function
 
 
 DUMMY = -1000
@@ -14,7 +14,7 @@ DUMMY = -1000
 
 class UserFeatures:
 
-    def __init__(self, data_path, write_path="data/user_features.csv", num_of_sessions=50000, events_sorted=False):
+    def __init__(self, data_path="../../data/events_sorted.csv", write_path="../../data/user_features.csv", num_of_sessions=50000, events_sorted=False):
 
         self.data = DictReader(open(data_path, encoding='utf-8'))
         self.sorted = events_sorted
@@ -46,7 +46,7 @@ class UserFeatures:
 
         self.user_sessions = None
 
-        item_prices_df = pd.read_csv(os.path.join("data", "item_prices.csv"))
+        item_prices_df = pd.read_csv(os.path.join("../../data", "item_prices.csv"))
         mean_item_prices = item_prices_df.groupby("item_id")["price"].mean().to_dict()
         self.mean_item_prices = defaultdict(int, mean_item_prices)
 
@@ -344,6 +344,6 @@ class UserFeatures:
 
 
 if __name__ == "__main__":
-    ufe = UserFeatures("data/events_sorted.csv", events_sorted=True)
+    ufe = UserFeatures("../../data/events_sorted.csv", events_sorted=True)
     ufe.extract_features()
     ufe.save_features()

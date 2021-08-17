@@ -1,22 +1,22 @@
-from item_feature_extractor import ItemFeatures
-from session_feature_extractor import SessionFeatures
-from user_feature_extractor import UserFeatures
-import merge_features
+from src.extraction.item_feature_extractor import ItemFeatures
+from src.extraction.session_feature_extractor import SessionFeatures
+from src.extraction.user_feature_extractor import UserFeatures
+from src.extraction import merge_session_and_user_features
 import time
 import pandas as pd
 
 
 def run_feature_extraction(save_separately=False,
                            read_only=False,
-                           session_file="data/events_sorted.csv",
-                           user_file="data/events_sorted.csv",
-                           item_file="data/user_session_merged.csv",
-                           save_as="data/all_features.csv"):
+                           session_file="../../data/events_sorted.csv",
+                           user_file="../../data/events_sorted.csv",
+                           item_file="../../data/user_session_merged.csv",
+                           save_as="../../data/all_features.csv"):
 
     t = time.time()
     if read_only:
-        uf = pd.read_csv("data/user_features.csv", index_col=0)
-        sf = pd.read_csv("data/session_features.csv", index_col=0)
+        uf = pd.read_csv("../../data/user_features.csv", index_col=0)
+        sf = pd.read_csv("../../data/session_features.csv", index_col=0)
 
     else:
         print("Extracting Session Features")
@@ -38,7 +38,7 @@ def run_feature_extraction(save_separately=False,
             ufe.save_features()
             sfe.save_features()
 
-    merge_features.merge_session_and_user_features(session_features=sf, user_features=uf)
+    merge_session_and_user_features.merge(session_features=sf, user_features=uf)
 
     ife = ItemFeatures(item_file, events_sorted=False)
     ife.extract_features()
@@ -49,4 +49,4 @@ def run_feature_extraction(save_separately=False,
 
 
 if __name__ == "__main__":
-    run_feature_extraction(read_only=False)
+    run_feature_extraction(save_separately=True, read_only=False)

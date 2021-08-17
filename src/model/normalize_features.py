@@ -1,7 +1,7 @@
 import os
 import joblib
 import pandas as pd
-from helpers import normalize_feature_name
+from src.helpers import normalize_feature_name
 from src.constants import ITEM_ACTIONS
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 class DataPreprocessing:
 
-    def __init__(self, features_file="data/all_features.csv"):
+    def __init__(self, features_file="../../data/all_features.csv"):
 
         self.features = pd.read_csv(features_file)
         self.table_cols = list(self.features.columns)
@@ -157,18 +157,18 @@ class DataPreprocessing:
         self.features[self.minmax] = self.minmax_scaler.transform(self.features[self.minmax])
 
         if "scalers" not in os.listdir():
-            os.mkdir("scalers")
+            os.mkdir("../../scalers")
 
-        joblib.dump(self.minmax_scaler, "scalers/minmax_scaler.joblib")
+        joblib.dump(self.minmax_scaler, "../../scalers/minmax_scaler.joblib")
 
     def apply_normalize_on_zero(self):
         self.standart_scaler.fit(self.features[self.normalize_on_zero])
         self.features[self.normalize_on_zero] = self.standart_scaler.transform(self.features[self.normalize_on_zero])
 
         if "scalers" not in os.listdir():
-            os.mkdir("scalers")
+            os.mkdir("../../scalers")
 
-        joblib.dump(self.minmax_scaler, "scalers/standart_scaler.joblib")
+        joblib.dump(self.minmax_scaler, "../../scalers/standart_scaler.joblib")
 
     def run(self, verbose=0):
         print("Nomalization started.")
@@ -179,7 +179,7 @@ class DataPreprocessing:
         self.apply_minmax()
         self.apply_normalize_on_zero()
 
-    def save(self, path="data/normalized_features.csv"):
+    def save(self, path="../../data/normalized_features.csv"):
         self.features.to_csv(path)
 
 

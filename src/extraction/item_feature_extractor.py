@@ -6,16 +6,16 @@ from itertools import groupby
 import time
 import pandas as pd
 import numpy as np
-from helpers import normalize_float
+from src.helpers import normalize_float
 
-EVENTS_PATH = os.path.join("data", "events_sorted.csv")
+EVENTS_PATH = os.path.join("../../data", "events_sorted.csv")
 
 DUMMY = -1000
 
 
 class ItemFeatures:
 
-    def __init__(self, data_path, write_path="data/all_features.csv", num_of_sessions=50000, events_sorted=False):
+    def __init__(self, data_path="../../data/user_session_merged.csv", write_path="../../data/all_features.csv", num_of_sessions=50000, events_sorted=False):
 
         self.data = DictReader(open(data_path, encoding='utf-8'))
         self.sorted = events_sorted
@@ -23,15 +23,15 @@ class ItemFeatures:
         self.num_of_sessions = num_of_sessions
         self.write_path = write_path
 
-        self.item_to_poi_map_df = joblib.load(os.path.join("data", "item_to_poi_map.joblib"))
-        self.item_sort_by_distance_stats_map = joblib.load(os.path.join("data", "item_sort_by_distance_stats.joblib"))
+        self.item_to_poi_map_df = joblib.load(os.path.join("../../data", "item_to_poi_map.joblib"))
+        self.item_sort_by_distance_stats_map = joblib.load(os.path.join("../../data", "item_sort_by_distance_stats.joblib"))
         self.item_sort_by_popularity_stats_map = joblib.load(
-            os.path.join("data", "item_sort_by_popularity_stats.joblib"))
-        self.item_sort_by_rating_stats_map = joblib.load(os.path.join("data", "item_sort_by_rating_stats.joblib"))
-        self.item_prices_features_df = pd.read_csv(os.path.join("data", "item_prices.csv"), index_col=0)
-        self.item_dense_features_df = pd.read_csv(os.path.join("data", "item_dense_features.csv"), index_col=0)
-        self.item_price_pct_by_platform_map = joblib.load(os.path.join("data", "price_pct_by_platform.joblib"))
-        self.item_price_pct_by_city_map = joblib.load(os.path.join("data", "price_pct_by_city.joblib"))
+            os.path.join("../../data", "item_sort_by_popularity_stats.joblib"))
+        self.item_sort_by_rating_stats_map = joblib.load(os.path.join("../../data", "item_sort_by_rating_stats.joblib"))
+        self.item_prices_features_df = pd.read_csv(os.path.join("../../data", "item_prices.csv"), index_col=0)
+        self.item_dense_features_df = pd.read_csv(os.path.join("../../data", "item_dense_features.csv"), index_col=0)
+        self.item_price_pct_by_platform_map = joblib.load(os.path.join("../../data", "price_pct_by_platform.joblib"))
+        self.item_price_pct_by_city_map = joblib.load(os.path.join("../../data", "price_pct_by_city.joblib"))
 
         self.item_data = None
         self.current_item_id = None
@@ -232,13 +232,13 @@ class ItemFeatures:
         self.add_dense_features()
 
     def save_features(self):
-        self.data_sorted_df.to_csv("data/all_features.csv")
+        self.data_sorted_df.to_csv("../../data/all_features.csv")
 
     def get_features(self):
         return self.data_sorted_df
 
 
 if __name__ == "__main__":
-    ife = ItemFeatures("data/user_session_merged.csv", events_sorted=True)
+    ife = ItemFeatures("../../data/user_session_merged.csv", events_sorted=True)
     ife.extract_features()
     ife.save_features()

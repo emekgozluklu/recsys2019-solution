@@ -1,23 +1,23 @@
 import pandas as pd
 import os
 from csv import DictReader
-from helpers import *
+from src.helpers import *
 from tqdm import tqdm
 from itertools import groupby
 from collections import defaultdict
-from constants import ITEM_ACTIONS
+from src.constants import ITEM_ACTIONS
 import joblib
 import arrow
 
-SAVE_PATH = os.path.join("data", "session_features.csv")
-CLICK_PROBS_PATH = os.path.join("data", "click_probs_by_index.joblib")
+SAVE_PATH = os.path.join("../../data", "session_features.csv")
+CLICK_PROBS_PATH = os.path.join("../../data", "click_probs_by_index.joblib")
 
 DUMMY = -1000
 
 
 class SessionFeatures:
 
-    def __init__(self, data_path="data/events_sorted.csv", write_path="data/session_features.csv", num_of_sessions=50000, events_sorted=False):
+    def __init__(self, data_path="../../data/events_sorted.csv", write_path="../../data/session_features.csv", num_of_sessions=50000, events_sorted=False):
 
         self.data = DictReader(open(data_path, encoding='utf-8'))
         self.sorted = events_sorted
@@ -26,7 +26,7 @@ class SessionFeatures:
         self.write_path = write_path
         self.clickout_probs = joblib.load(CLICK_PROBS_PATH)
 
-        self.item_prices = DictReader(open("data/item_prices.csv"))
+        self.item_prices = DictReader(open("../../data/item_prices.csv"))
 
         self.current_session_index = 0
         self.current_session_id = -1
