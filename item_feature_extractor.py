@@ -28,8 +28,8 @@ class ItemFeatures:
         self.item_sort_by_popularity_stats_map = joblib.load(
             os.path.join("data", "item_sort_by_popularity_stats.joblib"))
         self.item_sort_by_rating_stats_map = joblib.load(os.path.join("data", "item_sort_by_rating_stats.joblib"))
-        self.item_prices_features_df = pd.read_csv(os.path.join("data", "item_prices.csv"))
-        self.item_dense_features_df = pd.read_csv(os.path.join("data", "item_dense_features.csv"))
+        self.item_prices_features_df = pd.read_csv(os.path.join("data", "item_prices.csv"), index_col=0)
+        self.item_dense_features_df = pd.read_csv(os.path.join("data", "item_dense_features.csv"), index_col=0)
         self.item_price_pct_by_platform_map = joblib.load(os.path.join("data", "price_pct_by_platform.joblib"))
         self.item_price_pct_by_city_map = joblib.load(os.path.join("data", "price_pct_by_city.joblib"))
 
@@ -140,21 +140,21 @@ class ItemFeatures:
 
     def update_sort_by_rating_stats(self):
         try:
-            stats = self.item_sort_by_rating_stats_map[self.current_item_id]
+            stats = self.item_sort_by_rating_stats_map[int(self.current_item_id)]
         except KeyError:
             stats = 0
         self.sort_by_rating_stats.append(stats)
 
     def update_sort_by_distance_stats(self):
         try:
-            stats = self.item_sort_by_distance_stats_map[self.current_item_id]
+            stats = self.item_sort_by_distance_stats_map[int(self.current_item_id)]
         except KeyError:
             stats = 0
         self.sort_by_distance_stats.append(stats)
 
     def update_sort_by_popularity_stats(self):
         try:
-            stats = self.item_sort_by_popularity_stats_map[self.current_item_id]
+            stats = self.item_sort_by_popularity_stats_map[int(self.current_item_id)]
         except KeyError:
             stats = 0
         self.sort_by_popularity_stats.append(stats)
