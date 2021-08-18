@@ -40,6 +40,7 @@ class SessionFeatures:
         self.timestamp = None
         self.reference = None
         self.current_city = None
+        self.is_val = None
 
         self.session_id = []  # added
         self.session_start_ts = []  # added
@@ -88,6 +89,7 @@ class SessionFeatures:
         self.price = []
         self.item_id = []
         self.city = []
+        self.is_validation = []
 
         self.clicked = []
 
@@ -130,6 +132,7 @@ class SessionFeatures:
             "item_id": self.update_item_id,
             "clicked": self.update_clicked,
             "city": self.update_city,
+            "is_validation": self.update_is_validation,
             # "price_rel_to_hist_min": self.price_rel_to_hist_min,
             # "price_rel_to_hist_max": self.price_rel_to_hist_max,
             # "historical_mean_rank": self.historical_mean_rank,
@@ -178,6 +181,7 @@ class SessionFeatures:
             # "price_rel_to_hist_max": self.update_price_rel_to_hist_max,
             # "historical_mean_rank": self.update_historical_mean_rank,
             # "rank_among_historical_mean_ranks": self.update_rank_among_historical_mean_ranks,
+            "is_validation": self.is_validation,
 
             "clicked": self.clicked,
         }
@@ -404,6 +408,9 @@ class SessionFeatures:
     def update_city(self):
         self.city.append(self.current_city)
 
+    def update_is_validation(self):
+        self.is_validation.append(self.is_val)
+
     def invalid_session_handler(self):
         self.session_id.append(self.current_session_id)
         for feat in self.feature_names[1:]:
@@ -452,6 +459,7 @@ class SessionFeatures:
 
             if self.current_session_valid:
                 self.datetime = arrow.get(int(self.current_session_clickouts[-1]["timestamp"]))
+                self.is_val = int(self.current_session_clickouts[-1]["is_val"])
                 self.current_impressions = list(map(int, self.current_session_clickouts[-1]["impressions"].split("|")))
                 self.current_prices = list(map(int, self.current_session_clickouts[-1]["prices"].split("|")))
                 self.timestamp = self.current_session_clickouts[-1]["timestamp"]

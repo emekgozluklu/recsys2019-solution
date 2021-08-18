@@ -32,7 +32,7 @@ class DataPreprocessing:
             "interacted_items_avg_price_div", "clickout_item_ctr", "price_pct_by_platform", "price_pct_by_city",
             "sort_by_rating_stats", "sort_by_distance_stats", "sort_by_popularity_stats", "free_wifi_(combined)",
             "swimming_pool_(combined_filter)", "car_park", "serviced_apartment", "air_conditioning",
-            "spa_(wellness_facility)", "pet_friendly", "all_inclusive_(upon_inquiry)",
+            "spa_(wellness_facility)", "pet_friendly", "all_inclusive_(upon_inquiry)", "is_validation"
         ]
 
         self.log_scale_minmax = ["time_since_last_item_action", "user_start_ts"]
