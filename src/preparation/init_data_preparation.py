@@ -1,17 +1,14 @@
 import pandas as pd
-import numpy as np
 import arrow
 import os
 
 
-def run(write_path=os.path.join("../../data", "events_sorted.csv")):
+def run(
+        read_path=os.path.join("../../data", "sampled", "train_sample.csv"),
+        write_path=os.path.join("../../data", "events_sorted.csv")
+):
 
-    train_data = pd.read_csv(os.path.join("../../data", "train.csv"))
-    test_data = pd.read_csv(os.path.join("../../data", "test.csv"))
-
-    assert np.all(train_data.columns == test_data.columns)
-
-    events = pd.read_csv(os.path.join("../../data", "sampled", "train_sample.csv"), index_col=0)
+    events = pd.read_csv(read_path, index_col=0)
 
     # DATA PREPARATION ###
     # This part is inspired from the Logic AI, Layer6 AI and PVZ teams' solutions to the challenge.

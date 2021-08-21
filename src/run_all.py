@@ -7,17 +7,17 @@ from src.extraction import session_feature_extractor, item_feature_extractor, us
 from src.model import normalize_features
 
 
-def run_sampler():
+def run_sampler(outfile="train_sample.csv", n_sessions=50000):
     os.chdir("sampling")
-    data_sampler.sample_data()
+    data_sampler.sample_data(outfile, n_sessions)
     os.chdir("..")
 
 
-def run_data_preparation():
+def run_data_preparation(input_file="train_sample.csv"):
     print("#"*50)
     print("DATA PREPARATION")
     os.chdir("preparation")
-    init_data_preparation.run()
+    init_data_preparation.run(read_path=input_file)
     print("Data preparation initialized... [1 / 8]")
     generate_click_indices.run()
     print("Click indices generated... [2 / 8]")
@@ -74,11 +74,11 @@ def run_model():
     dp.run()
     dp.save()
     print("Feature normalized [1 / X]")
-    os.chdir("model")
+    os.chdir("..")
 
 
 if __name__ == "__main__":
-    # run_sampler()
-    # run_data_preparation()
+    run_sampler("train_sample.csv", 50000)
+    run_data_preparation("../../data/sampled/train_sample.csv")
     run_feature_extraction()
-    # run_model()
+    run_model()

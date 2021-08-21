@@ -120,11 +120,11 @@ class DataPreprocessing:
 
         last_action_type = self.features["last_action_type"]
         cols = {
-            "not_item_action": ~last_action_type.isin(ITEM_ACTIONS),
-            "item_action": last_action_type.isin(ITEM_ACTIONS),
+            "not_item_action": (~last_action_type.isin(ITEM_ACTIONS)).astype(int),
+            "item_action": last_action_type.isin(ITEM_ACTIONS).astype(int),
         }
         for name, value in cols.items():
-            self.features["last_action_type_" + name] = value.astype(int)
+            self.features["last_action_type_" + name] = value
 
         sessions_of_user = self.features["sessions_of_user"]
         cols = {
@@ -145,7 +145,9 @@ class DataPreprocessing:
         }
 
         for name, value in cols.items():
-            self.features["nour_" + name] = value.astype(int)
+            self.features["hour_" + name] = value.astype(int)
+
+        self.features.drop(columns=self.custom_one_hot, inplace=True)
 
     def apply_minmax(self):
         for feat in self.log_scale_minmax:
@@ -156,8 +158,10 @@ class DataPreprocessing:
         self.minmax_scaler.fit(self.features[self.minmax])
         self.features[self.minmax] = self.minmax_scaler.transform(self.features[self.minmax])
 
-        if "scalers" not in os.listdir():
+        try:
             os.mkdir("../../scalers")
+        except FileExistsError:
+            pass
 
         joblib.dump(self.minmax_scaler, "../../scalers/minmax_scaler.joblib")
 
@@ -165,8 +169,10 @@ class DataPreprocessing:
         self.standart_scaler.fit(self.features[self.normalize_on_zero])
         self.features[self.normalize_on_zero] = self.standart_scaler.transform(self.features[self.normalize_on_zero])
 
-        if "scalers" not in os.listdir():
+        try:
             os.mkdir("../../scalers")
+        except FileExistsError:
+            pass
 
         joblib.dump(self.minmax_scaler, "../../scalers/standart_scaler.joblib")
 

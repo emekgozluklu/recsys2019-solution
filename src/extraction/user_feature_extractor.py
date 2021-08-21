@@ -64,7 +64,6 @@ class UserFeatures:
         self.viewed_items_avg_price_div = []
         self.interacted_items_avg_price_div = []
         self.interacted_and_viewed_items_price_diff = []
-        self.item_clicked_before = []
         self.clickout_user_id = []
         self.clickout_session_id = []
         self.clickout_timestamp = []
@@ -84,7 +83,6 @@ class UserFeatures:
             "viewed_items_avg_price_div": self.update_viewed_items_avg_price_div,
             "interacted_items_avg_price_div": self.update_interacted_items_avg_price_div,
             "interacted_and_viewed_items_price_diff": self.update_interacted_and_viewed_items_price_diff,
-            "item_clicked_before": self.update_item_clicked_before,
             "clickout_user_id": self.update_action_identifiers,
             "clickout_session_id": dummy_function,
             "clickout_timestamp": dummy_function,
@@ -98,7 +96,6 @@ class UserFeatures:
             "sessions_of_user": self.sessions_of_user,
             # "global_avg_price_rank": self.global_avg_price_rank,
             "user_viewed_item": self.user_viewed_item,
-            "item_clicked_before": self.item_clicked_before,
             "avg_price_similarity": self.avg_price_similarity,
             "user_interacted_item": self.user_interacted_item,
             "viewed_items_avg_price": self.viewed_items_avg_price,
@@ -206,9 +203,6 @@ class UserFeatures:
             self.interacted_and_viewed_items_price_diff.append(abs(int_avg - click_avg))
         else:
             self.interacted_and_viewed_items_price_diff.append(0)  # DUMMY
-
-    def update_item_clicked_before(self):
-        self.item_clicked_before.append("|".join([str(int(imp_id in self.user_interacted_items)) for imp_id in self.current_impressions]))
 
     def invalid_session_handler(self):
         self.last_price_diff_general.append(None)

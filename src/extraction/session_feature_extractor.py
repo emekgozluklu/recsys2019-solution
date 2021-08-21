@@ -195,12 +195,11 @@ class SessionFeatures:
 
     def update_session_start_ts(self):
         start_ts = int(self.current_session[0]["timestamp"])
-        end_ts = int(self.current_session[-1]["timestamp"])
-        self.session_start_ts.append(end_ts - start_ts)
+        self.session_start_ts.append(int(self.timestamp) - start_ts)
 
     def update_price_vs_mean_price(self):
         mean_price = sum(self.current_prices) / len(self.current_prices)
-        self.price_vs_mean_price.append("|".join([str(round(pri/mean_price, 3)) for pri in self.current_prices]))
+        self.price_vs_mean_price.append("|".join([str(normalize_float(pri/mean_price)) for pri in self.current_prices]))
 
     def update_clickout_item_item_last_timestamp(self):
         if len(self.current_session_clickouts) > 2:
@@ -229,7 +228,10 @@ class SessionFeatures:
             self.previous_click_price_diff_session.append("|".join(["0"]*len(self.current_prices)))
 
     def update_time_since_last_image_interaction(self):
-        image_interactions = list(filter(lambda x: x["action_type"] == "interaction item image", self.current_session))
+        image_interactions = list(filter(
+            lambda x: x["action_type"] == "interaction item image" and int(x["timestamp"]) < int(self.timestamp),
+            self.current_session)
+        )
         if len(image_interactions) > 0:
             last_image_interaction_time = int(image_interactions[-1]["timestamp"])
             current_clickout_time = int(self.current_session_clickouts[-1]["timestamp"])
@@ -255,7 +257,7 @@ class SessionFeatures:
 
     def update_num_of_item_actions(self):
         session_item_actions = defaultdict(int)
-        for action in self.current_session[:-1]:
+        for action in filter(lambda x: int(x["timestamp"]) < int(self.timestamp), self.current_session):
             if action["action_type"] in ITEM_ACTIONS:
                 if action["reference"] == "unknown":
                     continue
